@@ -2,106 +2,541 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>World Cup Draft</title>
+<title>World Cup Games</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
     :root { --neon-blue: #00f2ff; --neon-purple: #9d00ff; --bg: #0a0a0f; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
-    #bg-img { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(10px); z-index: -1; transform: scale(1.1); }
-    .card { background: #000; padding: 30px; border-radius: 20px; border: 1px solid #333; width: 90%; max-width: 900px; position: relative; }
-    
-    /* RESET BUTTON: Tight wrap and pushed slightly below */
-    .reset-btn { 
-        position: absolute; 
-        bottom: 10px; 
-        right: 15px; 
-        background: transparent; 
-        color: #ff4d4d; 
-        border: 1px solid #ff4d4d; 
-        padding: 2px 6px; 
-        border-radius: 4px; 
-        font-size: 0.55rem; 
-        cursor: pointer; 
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        overflow: hidden;
+    }
+    #bg-img {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        object-fit: cover;
+        filter: blur(10px);
+        z-index: -1;
+        transform: scale(1.1);
+    }
+    .card {
+        background: #000;
+        padding: 30px;
+        border-radius: 20px;
+        border: 1px solid #333;
+        width: 90%;
+        max-width: 900px;
+        position: relative;
+        box-sizing: border-box;
+    }
+    h2 { text-align: center; color: var(--neon-blue); margin-top: 0; }
+
+    input, select {
+        padding: 10px;
+        background: #111;
+        border: 1px solid #444;
+        color: white;
+        border-radius: 8px;
+        width: 100%;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+    }
+    button {
+        padding: 12px 20px;
+        cursor: pointer;
+        background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    button:disabled {
         opacity: 0.4;
-        display: inline-block;
-        width: auto; /* Tight boundary */
+        cursor: default;
+    }
+
+    .reset-btn {
+        position: absolute;
+        bottom: 10px;
+        right: 15px;
+        background: transparent;
+        color: #ff4d4d;
+        border: 1px solid #ff4d4d;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.55rem;
+        cursor: pointer;
+        opacity: 0.4;
+        width: auto;
     }
     .reset-btn:hover { opacity: 1; background: #ff4d4d; color: white; }
 
-    h2 { text-align: center; color: var(--neon-blue); margin-top: 0; }
-    input, select { padding: 12px; background: #111; border: 1px solid #444; color: white; border-radius: 8px; width: 100%; margin-bottom: 12px; box-sizing: border-box; }
-    button { padding: 12px 25px; cursor: pointer; background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple)); color: white; border: none; border-radius: 8px; font-weight: bold; width: 100%; }
-    .results-title { color: var(--neon-blue); text-align: center; margin-bottom: 5px; }
-    .results-subtitle { text-align: center; font-size: 0.8rem; margin-bottom: 20px; color: #aaa; }
-    .draft-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .draft-card { background: #111; border: 1px solid #222; border-radius: 8px; padding: 10px; text-align: center; }
-    .draft-player { font-weight: bold; color: var(--neon-blue); margin-bottom: 8px; font-size: 0.9rem; }
-    .team-line { font-size: 0.8rem; display: flex; align-items: center; justify-content: flex-start; gap: 8px; height: 20px; margin-bottom: 4px; }
-    .flag-container { width: 25px; display: flex; justify-content: center; }
+    .back-btn {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: linear-gradient(45deg, #00f2ff, #0099cc);
+        color: #000;
+        border: none;
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        cursor: pointer;
+        opacity: 0.9;
+    }
+    .back-btn:hover { opacity: 1; }
+
+    .row {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+    }
+    .col {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .country-panel {
+        border: 1px solid #333;
+        border-radius: 10px;
+        padding: 10px;
+        height: 350px;
+        overflow-y: auto;
+        background: #0d0d0d;
+    }
+
+    .country-grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 6px;
+        margin-top: 10px;
+    }
+    .country-option {
+        font-size: 0.7rem;
+        background:#111;
+        border:1px solid #222;
+        border-radius:6px;
+        padding:4px 6px;
+        display:flex;
+        align-items:center;
+        gap:4px;
+    }
+    .country-option input { width:auto; margin:0; }
+
+    .small-note { font-size:0.75rem; opacity:0.7; margin-top:4px; }
+
+    .mode-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    .mode-buttons button { width: 50%; }
+
+    .draft-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+    .draft-card {
+        background: #111;
+        border: 1px solid #222;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+    }
+    .draft-player {
+        font-weight: bold;
+        color: var(--neon-blue);
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+    .team-line {
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+    .flag-container { width: 24px; display: flex; justify-content: center; }
     .team-flag { width: 20px; height: 15px; object-fit: cover; }
+
+    .prediction-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+    .prediction-row strong {
+        min-width: 90px;
+        font-size: 0.85rem;
+    }
+
+    .summary-card {
+        background:#111;
+        border:1px solid #222;
+        border-radius:10px;
+        padding:12px;
+        margin-bottom:10px;
+    }
+    .summary-country {
+        font-size:1rem;
+        font-weight:bold;
+        color:var(--neon-blue);
+        margin-bottom:6px;
+    }
+    .summary-player {
+        font-size:0.85rem;
+        margin-left:10px;
+    }
+
+    .results-title { color: var(--neon-blue); text-align: center; margin-bottom: 5px; }
+    .results-subtitle { text-align: center; font-size: 0.8rem; margin-bottom: 15px; color: #aaa; }
+
+    .download-btn {
+        margin-top: 15px;
+    }
+
+    .mini-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+    }
+    .mini-buttons button {
+        padding: 6px 10px;
+        font-size: 0.7rem;
+        width: auto;
+    }
 </style>
 </head>
 <body>
 <img id="bg-img" src="https://i.imgur.com/pe8d8Lj.jpeg" crossorigin="anonymous">
 <div class="card" id="captureCard">
     <button class="reset-btn" onclick="location.reload()">RESET</button>
-    <div id="step1">
-        <h2>World Cup Draft</h2>
-        <label>Draft Title:</label> <input type="text" id="draftTitle" value="World Cup Draft">
-        <label>Number of Players:</label> <input type="number" id="numPeople" value="8" min="1" max="48">
-        <button onclick="goToStep2()">Continue</button>
+
+    <div id="page0">
+        <h2>World Cup Setup</h2>
+        <label>Number of Players:</label>
+        <input type="number" id="numPlayers" value="8" min="1" max="48">
+
+        <label>Number of Countries:</label>
+        <select id="numCountries">
+            <option value="48">48 (All)</option>
+            <option value="32">32</option>
+            <option value="16">16</option>
+            <option value="8">8</option>
+            <option value="4">4</option>
+        </select>
+
+        <button onclick="goToPage1()">Continue</button>
     </div>
-    <div id="step2" style="display:none;"><div id="nameInputs"></div><button onclick="prepareDraft()">Start Draft</button></div>
-    <div id="step3" style="display:none;">
-        <h2 id="finalTitle" class="results-title"></h2>
-        <div id="drawDate" class="results-subtitle"></div>
-        <div id="results" class="draft-grid"></div>
-        <div style="text-align:center; margin-top:20px;"><button id="downloadBtn" onclick="downloadResults()">DOWNLOAD IMAGE</button></div>
+
+    <div id="page1" style="display:none;">
+        <h2>Players & Countries</h2>
+        <div class="row">
+            <div class="col">
+                <label>Player Names:</label>
+                <div id="playerNamesContainer"></div>
+            </div>
+            <div class="col">
+                <label>Select Countries:</label>
+
+                <div class="mini-buttons">
+                    <button onclick="selectAllCountries()">Select All</button>
+                    <button onclick="deselectAllCountries()">Deselect All</button>
+                </div>
+
+                <div class="small-note">
+                    Select exactly <span id="targetCountriesLabel"></span> countries.
+                    Selected: <span id="selectedCount">0</span>
+                </div>
+
+                <div class="country-panel">
+                    <div id="countryGrid" class="country-grid"></div>
+                </div>
+            </div>
+        </div>
+        <button id="page1ContinueBtn" onclick="goToPage2()" disabled>Continue</button>
+    </div>
+
+    <div id="page2" style="display:none;">
+        <h2>Choose Game Mode</h2>
+        <div class="mode-buttons">
+            <button onclick="startAssignCountriesGame()">Assign Countries Game</button>
+            <button style="background:#333;" onclick="startWinnerPredictionGame()">Winner Prediction Game</button>
+        </div>
+    </div>
+
+    <div id="pageDraft" style="display:none;">
+        <button class="back-btn" onclick="backToPage2()">← Back</button>
+        <h2 id="draftTitle" class="results-title"></h2>
+        <div id="draftDate" class="results-subtitle"></div>
+        <div id="draftResults" class="draft-grid"></div>
+        <button class="download-btn" id="downloadDraftBtn" onclick="downloadImage('draft')">Download Image</button>
+    </div>
+
+    <div id="pageWinnerChooser" style="display:none;">
+        <button class="back-btn" onclick="backToPage2()">← Back</button>
+        <h2>Winner Prediction</h2>
+        <div id="winnerChooserArea"></div>
+        <button style="margin-top:10px;" onclick="showWinnerSummary()">Show Results</button>
+    </div>
+
+    <div id="pageWinnerSummary" style="display:none;">
+        <button class="back-btn" onclick="backToWinnerChooser()">← Back</button>
+        <h2>Prediction Summary</h2>
+        <div id="winnerSummaryArea"></div>
+        <button class="download-btn" id="downloadSummaryBtn" onclick="downloadImage('summary')">Download Image</button>
     </div>
 </div>
 
 <script>
 const teamData = [
-    { name: "Argentina", code: "ar" }, { name: "Australia", code: "au" }, { name: "Austria", code: "at" }, { name: "Belgium", code: "be" }, { name: "Brazil", code: "br" }, { name: "Canada", code: "ca" }, { name: "Chile", code: "cl" }, { name: "Colombia", code: "co" }, { name: "Costa Rica", code: "cr" }, { name: "Croatia", code: "hr" }, { name: "Denmark", code: "dk" }, { name: "Ecuador", code: "ec" }, { name: "Egypt", code: "eg" }, { name: "England", code: "gb" }, { name: "France", code: "fr" }, { name: "Germany", code: "de" }, { name: "Ghana", code: "gh" }, { name: "Greece", code: "gr" }, { name: "Iran", code: "ir" }, { name: "Iraq", code: "iq" }, { name: "Italy", code: "it" }, { name: "Ivory Coast", code: "ci" }, { name: "Japan", code: "jp" }, { name: "Mexico", code: "mx" }, { name: "Morocco", code: "ma" }, { name: "Netherlands", code: "nl" }, { name: "New Zealand", code: "nz" }, { name: "Nigeria", code: "ng" }, { name: "Norway", code: "no" }, { name: "Panama", code: "pa" }, { name: "Paraguay", code: "py" }, { name: "Peru", code: "pe" }, { name: "Poland", code: "pl" }, { name: "Portugal", code: "pt" }, { name: "Qatar", code: "qa" }, { name: "Saudi Arabia", code: "sa" }, { name: "Senegal", code: "sn" }, { name: "Serbia", code: "rs" }, { name: "South Africa", code: "za" }, { name: "South Korea", code: "kr" }, { name: "Spain", code: "es" }, { name: "Sweden", code: "se" }, { name: "Switzerland", code: "ch" }, { name: "Tunisia", code: "tn" }, { name: "Türkiye", code: "tr" }, { name: "Ukraine", code: "ua" }, { name: "United States", code: "us" }, { name: "Uruguay", code: "uy" }
+    { name: "Argentina", code: "ar" }, { name: "Australia", code: "au" }, { name: "Austria", code: "at" },
+    { name: "Belgium", code: "be" }, { name: "Brazil", code: "br" }, { name: "Canada", code: "ca" },
+    { name: "Chile", code: "cl" }, { name: "Colombia", code: "co" }, { name: "Costa Rica", code: "cr" },
+    { name: "Croatia", code: "hr" }, { name: "Denmark", code: "dk" }, { name: "Ecuador", code: "ec" },
+    { name: "Egypt", code: "eg" }, { name: "England", code: "gb" }, { name: "France", code: "fr" },
+    { name: "Germany", code: "de" }, { name: "Ghana", code: "gh" }, { name: "Greece", code: "gr" },
+    { name: "Iran", code: "ir" }, { name: "Iraq", code: "iq" }, { name: "Italy", code: "it" },
+    { name: "Ivory Coast", code: "ci" }, { name: "Japan", code: "jp" }, { name: "Mexico", code: "mx" },
+    { name: "Morocco", code: "ma" }, { name: "Netherlands", code: "nl" }, { name: "New Zealand", code: "nz" },
+    { name: "Nigeria", code: "ng" }, { name: "Norway", code: "no" }, { name: "Panama", code: "pa" },
+    { name: "Paraguay", code: "py" }, { name: "Peru", code: "pe" }, { name: "Poland", code: "pl" },
+    { name: "Portugal", code: "pt" }, { name: "Qatar", code: "qa" }, { name: "Saudi Arabia", code: "sa" },
+    { name: "Senegal", code: "sn" }, { name: "Serbia", code: "rs" }, { name: "South Africa", code: "za" },
+    { name: "South Korea", code: "kr" }, { name: "Spain", code: "es" }, { name: "Sweden", code: "se" },
+    { name: "Switzerland", code: "ch" }, { name: "Tunisia", code: "tn" }, { name: "Türkiye", code: "tr" },
+    { name: "Ukraine", code: "ua" }, { name: "United States", code: "us" }, { name: "Uruguay", code: "uy" }
 ];
 
-function goToStep2() {
-    let num = Math.max(1, Math.min(48, parseInt(document.getElementById('numPeople').value) || 1));
-    const container = document.getElementById('nameInputs');
-    container.innerHTML = Array.from({length:num}, (_,i) => `<input type="text" class="nameField" placeholder="Player ${i+1}">`).join('');
-    document.getElementById('step1').style.display = 'none';
-    document.getElementById('step2').style.display = 'block';
-}
+let numPlayers = 8;
+let numCountries = 48;
+let selectedTeamIndices = [];
+let selectedTeams = [];
+let players = [];
+let draftAssignments = [];
+let winnerPicks = {};
 
-function prepareDraft() {
-    const fields = document.querySelectorAll('.nameField');
-    let players = Array.from(fields).map((f, i) => f.value.trim() || `Player ${i+1}`);
-    players.sort(() => 0.5 - Math.random());
-    let shuffledTeams = [...teamData].sort(() => 0.5 - Math.random());
-    let playerState = players.map(name => ({name, teams: []}));
-    shuffledTeams.forEach((team, index) => playerState[index % playerState.length].teams.push(team));
-
-    document.getElementById("finalTitle").innerText = document.getElementById("draftTitle").value.trim();
-    document.getElementById("drawDate").innerText = "Draw Date: " + new Date().toLocaleString();
-    const container = document.getElementById('results');
-    container.innerHTML = "";
-    playerState.forEach(p => {
-        container.innerHTML += `<div class="draft-card"><div class="draft-player">${p.name}</div>${p.teams.map(t => `<div class="team-line"><div class="flag-container"><img src="https://flagcdn.com/w20/${t.code}.png" class="team-flag"></div> ${t.name}</div>`).join('')}</div>`;
+function showPage(id) {
+    ['page0','page1','page2','pageDraft','pageWinnerChooser','pageWinnerSummary'].forEach(p => {
+        document.getElementById(p).style.display = (p === id ? 'block' : 'none');
     });
-    document.getElementById('step2').style.display = 'none';
-    document.getElementById('step3').style.display = 'block';
 }
 
-function downloadResults() {
-    const btn = document.getElementById('downloadBtn');
+function goToPage1() {
+    numPlayers = Math.max(1, Math.min(48, parseInt(document.getElementById('numPlayers').value) || 1));
+    numCountries = parseInt(document.getElementById('numCountries').value, 10);
+
+    buildPlayerInputs();
+    buildCountryGrid();
+
+    selectedTeamIndices = [];
+    document.getElementById('selectedCount').innerText = 0;
+    document.getElementById('targetCountriesLabel').innerText = numCountries;
+    document.getElementById('page1ContinueBtn').disabled = true;
+
+    showPage('page1');
+}
+
+function buildPlayerInputs() {
+    const container = document.getElementById('playerNamesContainer');
+    container.innerHTML = '';
+    for (let i = 0; i < numPlayers; i++) {
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.placeholder = `Player ${i+1}`;
+        inp.className = 'playerNameField';
+        container.appendChild(inp);
+    }
+}
+
+function buildCountryGrid() {
+    const grid = document.getElementById('countryGrid');
+    grid.innerHTML = teamData.map((t, i) => `
+        <label class="country-option">
+            <input type="checkbox" onchange="toggleCountry(this, ${i})">
+            ${t.name}
+        </label>
+     `).join('');
+}
+
+function toggleCountry(checkbox, index) {
+    if (checkbox.checked) {
+        if (selectedTeamIndices.length >= numCountries) {
+            checkbox.checked = false;
+            return;
+        }
+        selectedTeamIndices.push(index);
+    } else {
+        selectedTeamIndices = selectedTeamIndices.filter(i => i !== index);
+    }
+    document.getElementById('selectedCount').innerText = selectedTeamIndices.length;
+    document.getElementById('page1ContinueBtn').disabled = (selectedTeamIndices.length !== numCountries);
+}
+
+function selectAllCountries() {
+    const boxes = document.querySelectorAll('#countryGrid input[type="checkbox"]');
+    boxes.forEach(b => b.checked = true);
+    selectedTeamIndices = teamData.map((_, i) => i);
+    document.getElementById('selectedCount').innerText = selectedTeamIndices.length;
+    document.getElementById('page1ContinueBtn').disabled = (selectedTeamIndices.length !== numCountries);
+}
+
+function deselectAllCountries() {
+    const boxes = document.querySelectorAll('#countryGrid input[type="checkbox"]');
+    boxes.forEach(b => b.checked = false);
+    selectedTeamIndices = [];
+    document.getElementById('selectedCount').innerText = 0;
+    document.getElementById('page1ContinueBtn').disabled = true;
+}
+
+function goToPage2() {
+    const fields = document.querySelectorAll('.playerNameField');
+    players = Array.from(fields).map((f, i) => f.value.trim() || `Player ${i+1}`);
+    selectedTeams = selectedTeamIndices.map(i => teamData[i]);
+    showPage('page2');
+}
+
+function backToPage2() {
+    showPage('page2');
+}
+
+function backToWinnerChooser() {
+    buildWinnerChooser();
+    showPage('pageWinnerChooser');
+}
+
+function startAssignCountriesGame() {
+    const confirmation = confirm("Are you sure? On the next page, your country names will show up!");
+    if (!confirmation) return;
+
+    const shuffledPlayers = [...players].sort(() => 0.5 - Math.random());
+    const shuffledTeams = [...selectedTeams].sort(() => 0.5 - Math.random());
+
+    draftAssignments = shuffledPlayers.map(p => ({ name: p, teams: [] }));
+
+    shuffledTeams.forEach((team, idx) => {
+        draftAssignments[idx % draftAssignments.length].teams.push(team);
+    });
+
+    buildDraftResults();
+    showPage('pageDraft');
+}
+
+function buildDraftResults() {
+    document.getElementById('draftTitle').innerText = "Assign Countries Game";
+    document.getElementById('draftDate').innerText = "Draw Date: " + new Date().toLocaleString();
+
+    const container = document.getElementById('draftResults');
+    container.innerHTML = '';
+
+    draftAssignments.forEach(p => {
+        container.innerHTML += `
+            <div class="draft-card">
+                <div class="draft-player">${p.name}</div>
+                ${p.teams.map(t => `
+                    <div class="team-line">
+                        <div class="flag-container">
+                            <img src="https://flagcdn.com/w20/${t.code}.png" class="team-flag">
+                        </div>
+                        ${t.name}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    });
+}
+
+/* WINNER PREDICTION GAME */
+function startWinnerPredictionGame() {
+    buildWinnerChooser();
+    showPage('pageWinnerChooser');
+}
+
+function buildWinnerChooser() {
+    const area = document.getElementById('winnerChooserArea');
+    const shuffledPlayers = [...players].sort(() => 0.5 - Math.random());
+
+    let options = selectedTeams
+        .map(t => `<option value="${t.name}">${t.name}</option>`)
+        .join('');
+
+    let html = '';
+    shuffledPlayers.forEach((p, i) => {
+        html += `
+            <div class="prediction-row">
+                <strong>${p}:</strong>
+                <select id="winner-pick-${i}">
+                    ${options}
+                </select>
+            </div>
+        `;
+    });
+
+    area.innerHTML = html;
+}
+
+function showWinnerSummary() {
+    winnerPicks = {};
+    const rows = document.querySelectorAll('#winnerChooserArea .prediction-row');
+
+    rows.forEach((row, i) => {
+        const name = row.querySelector('strong').innerText.replace(':', '').trim();
+        const sel = document.getElementById(`winner-pick-${i}`);
+        const country = sel.value;
+
+        if (!winnerPicks[country]) winnerPicks[country] = [];
+        winnerPicks[country].push(name);
+    });
+
+    const summary = document.getElementById('winnerSummaryArea');
+    summary.innerHTML = '';
+
+    Object.keys(winnerPicks).sort().forEach(country => {
+        summary.innerHTML += `
+            <div class="summary-card">
+                <div class="summary-country">${country}</div>
+                ${winnerPicks[country].map(p => `
+                    <div class="summary-player">• ${p}</div>
+                `).join('')}
+            </div>
+        `;
+    });
+
+    showPage('pageWinnerSummary');
+}
+
+/* DOWNLOAD IMAGE */
+function downloadImage(type) {
     const resetBtn = document.querySelector('.reset-btn');
-    btn.style.display = 'none'; resetBtn.style.display = 'none';
-    html2canvas(document.getElementById('captureCard'), { backgroundColor: '#000', useCORS: true, scale: 2 }).then(canvas => {
+    const draftBtn = document.getElementById('downloadDraftBtn');
+    const summaryBtn = document.getElementById('downloadSummaryBtn');
+
+    if (type === 'draft') draftBtn.style.display = 'none';
+    if (type === 'summary') summaryBtn.style.display = 'none';
+    resetBtn.style.display = 'none';
+
+    html2canvas(document.getElementById('captureCard'), {
+        backgroundColor: '#000',
+        useCORS: true,
+        scale: 2
+    }).then(canvas => {
         const link = document.createElement('a');
-        link.download = 'world-cup-draft.png';
+        link.download = type === 'draft'
+            ? 'assign-countries.png'
+            : 'winner-prediction.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
-        btn.style.display = 'block'; resetBtn.style.display = 'block';
+
+        if (type === 'draft') draftBtn.style.display = 'block';
+        if (type === 'summary') summaryBtn.style.display = 'block';
+        resetBtn.style.display = 'block';
     });
 }
 </script>
