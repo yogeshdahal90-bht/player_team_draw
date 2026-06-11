@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>World Cup Draft</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+    :root {
+        --neon-blue: #00f2ff;
+        --neon-purple: #9d00ff;
+        --bg: #0a0a0f;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Emoji", "Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: url('https://i.imgur.com/pe8d8Lj.jpeg') center/cover no-repeat;
+        filter: blur(10px);
+        transform: scale(1.1);
+        z-index: -1;
+    }
+
+    .card {
+        background: rgba(0, 0, 0, 0.7); /* Solid fallback */
+        padding: 35px;
+        border-radius: 30px;
+        border: 1px solid rgba(255,255,255,0.15);
+        box-shadow: 0 0 40px rgba(0, 242, 255, 0.25);
+        width: 100%;
+        max-width: 1000px;
+    }
+
+    h2 { text-align: center; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+
+    input, select {
+        padding: 12px; background: rgba(0,0,0,0.6);
+        border: 1px solid var(--neon-blue); color: white;
+        border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 12px;
+    }
+
+    button {
+        padding: 12px 25px; cursor: pointer;
+        background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+        color: white; border: none; border-radius: 8px;
+        font-weight: bold; transition: 0.3s; margin: 5px; width: 100%;
+    }
+
+    button:hover { transform: scale(1.02); filter: brightness(1.2); }
+
+    .hidden { display: none; }
+
+    .results-title { text-align: center; font-size: 2rem; margin-bottom: 10px; color: var(--neon-blue); text-shadow: 0 0 12px var(--neon-blue); }
+    .results-subtitle { text-align: center; font-size: 0.9rem; margin-bottom: 30px; opacity: 0.7; }
+
+    .draft-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
+
+    .draft-card {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(0,255,255,0.3);
+        border-radius: 14px; padding: 18px; text-align: center;
+        transition: 0.4s ease; opacity: 0; transform: translateY(20px);
+    }
+    .draft-card.visible { opacity: 1; transform: translateY(0); }
+
+    .draft-header { font-size: 0.8rem; opacity: 0.6; margin-bottom: 6px; text-transform: uppercase; }
+    .draft-player { font-size: 1.2rem; font-weight: bold; color: var(--neon-blue); margin-bottom: 12px; }
+    .team-line { margin: 4px 0; font-size: 0.9rem; }
+</style>
+</head>
+
+<body>
+
+<div class="card" id="captureCard">
+    <div id="step1">
+        <label>Draft Title:</label>
+        <input type="text" id="draftTitle" placeholder="2026 World Cup Draft">
+        <label>Number of Players:</label>
+        <input type="number" id="numPeople" value="8" min="1" max="48">
+        <label>Reveal Style:</label>
+        <select id="revealMode">
+            <option value="instant">Instant Reveal</option>
+            <option value="click">Click to Reveal</option>
+        </select>
+        <button onclick="goToStep2()">Continue</button>
+    </div>
+
+    <div id="step2" class="hidden">
+        <div id="nameInputs"></div>
+        <button onclick="prepareDraft()">Start Draft</button>
+    </div>
+
+    <div id="step3" class="hidden">
+        <h2 id="finalTitle" class="results-title"></h2>
+        <div id="drawDate" class="results-subtitle"></div>
+        <div id="results" class="draft-grid"></div>
+        <div style="text-align:center; margin-top:30px;">
+            <button id="revealBtn" class="hidden" onclick="revealRandom()">Reveal Next</button>
+            <button id="downloadBtn" class="hidden" onclick="downloadResults()" style="background: var(--neon-purple);">DOWNLOAD IMAGE</button>
+            <button onclick="location.reload()">NEW DRAFT</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const allTeams = ["Argentina 🇦🇷","Australia 🇦🇺","Austria 🇦🇹","Belgium 🇧🇪","Brazil 🇧🇷","Canada 🇨🇦","Chile 🇨🇱","Colombia 🇨🇴","Costa Rica 🇨🇷","Croatia 🇭🇷","Denmark 🇩🇰","Ecuador 🇪🇨","Egypt 🇪🇬","England 🇬🇧","France 🇫🇷","Germany 🇩🇪","Ghana 🇬🇭","Greece 🇬🇷","Iran 🇮🇷","Iraq 🇮🇶","Italy 🇮🇹","Ivory Coast 🇨🇮","Japan 🇯🇵","Mexico 🇲🇽","Morocco 🇲🇦","Netherlands 🇳🇱","New Zealand 🇳🇿","Nigeria 🇳🇬","Norway 🇳🇴","Panama 🇵🇦","Paraguay 🇵🇾","Peru 🇵🇪","Poland 🇵🇱","Portugal 🇵🇹","Qatar 🇶🇦","Saudi Arabia 🇸🇦","Senegal 🇸🇳","Serbia 🇷🇸","South Africa 🇿🇦","South Korea 🇰🇷","Spain 🇪🇸","Sweden 🇸🇪","Switzerland 🇨🇭","Tunisia 🇹🇳","Türkiye 🇹🇷","Ukraine 🇺🇦","United States 🇺🇸","Uruguay 🇺🇾"];
+
+function goToStep2() {
+    let num = parseInt(document.getElementById('numPeople').value) || 1;
+    num = Math.max(1, Math.min(48, num));
+    const container = document.getElementById('nameInputs');
+    container.innerHTML = Array.from({length:num}, (_,i) => `<input type="text" class="nameField" placeholder="Player ${i+1}">`).join('');
+    document.getElementById('step1').classList.add('hidden');
+    document.getElementById('step2').classList.remove('hidden');
+}
+
+function prepareDraft() {
+    const fields = document.querySelectorAll('.nameField');
+    let players = Array.from(fields).map((f, i) => f.value.trim() || `Player ${i+1}`);
+    players.sort(() => 0.5 - Math.random());
+    const teams = [...allTeams].sort(() => 0.5 - Math.random());
+    let playerState = players.map(name => ({name, teams: []}));
+    teams.forEach((team, index) => playerState[index % playerState.length].teams.push(team));
+
+    window.currentRevealQueue = playerState;
+    document.getElementById("finalTitle").innerText = document.getElementById("draftTitle").value.trim() || "World Cup Draft";
+    
+    // Set the Date and Time
+    const now = new Date();
+    document.getElementById("drawDate").innerText = "Draw Date: " + now.toLocaleString();
+
+    document.getElementById('step2').classList.add('hidden');
+    document.getElementById('step3').classList.remove('hidden');
+
+    if (document.getElementById('revealMode').value === 'instant') {
+        window.currentRevealQueue.forEach((p, i) => renderPlayer(p, i));
+        document.getElementById('downloadBtn').classList.remove('hidden');
+    } else {
+        document.getElementById('revealBtn').classList.remove('hidden');
+    }
+}
+
+function renderPlayer(p, index) {
+    const container = document.getElementById('results');
+    const div = document.createElement('div');
+    div.className = 'draft-card';
+    div.innerHTML = `<div class="draft-header">Drafter ${index + 1}</div><div class="draft-player">${p.name}</div>${p.teams.map(t => `<div class="team-line">${t}</div>`).join('')}`;
+    container.appendChild(div);
+    setTimeout(() => div.classList.add('visible'), 50);
+}
+
+function revealRandom() {
+    if (window.currentRevealQueue.length > 0) {
+        renderPlayer(window.currentRevealQueue.shift(), document.querySelectorAll('.draft-card').length);
+    }
+    if (window.currentRevealQueue.length === 0) {
+        document.getElementById('revealBtn').classList.add('hidden');
+        document.getElementById('downloadBtn').classList.remove('hidden');
+    }
+}
+
+function downloadResults() {
+    const card = document.getElementById('captureCard');
+    html2canvas(card, { backgroundColor: '#0a0a0f', logging: false }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'world-cup-draft.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    });
+}
+</script>
+</body>
+</html>
